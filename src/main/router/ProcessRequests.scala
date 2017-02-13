@@ -9,7 +9,8 @@ import messages._
 class ProcessRequests(storage: ActorRef) extends Actor {
 
   def receive = {
-    case CreateOrUpdate(k, v) => storage forward CreateOrUpdate(k, v)
+    case Create(v) => storage forward Create(v)
+    case Update(k, v) => storage forward Update(k, v)
     case Read(k) => storage forward Read(k)
     case Delete(k) => storage forward Delete(k)
   }

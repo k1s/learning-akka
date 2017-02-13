@@ -21,24 +21,35 @@ class Router(system: ActorSystem, timeout: Timeout, processRequests: ActorRef) {
 
   implicit def requestTimeout = timeout
 
-  implicit val createFormat = jsonFormat2(CreateOrUpdate)
+  implicit val createFormat = jsonFormat1(Create)
   implicit val readFormat = jsonFormat1(Read)
+  implicit val updateFormat = jsonFormat2(Update)
   implicit val deleteFormat = jsonFormat1(Delete)
 
   val restPath = "storage"
 
-  val routes = createOrUpdateValue ~ readValue ~ deleteValue
+  val routes = createValue ~ updateValue ~ readValue ~ deleteValue
 
   val standardResponse: (Any) => server.Route = {
     case Complete => complete(StatusCodes.OK)
     case Error => complete(StatusCodes.InternalServerError)
   }
 
-  def createOrUpdateValue =
+  def createValue =
+    post {
+      pathPrefix(restPath / Segment) { value =>
+          onSuccess(processRequests.ask(Create(value))) {
+            case Key(k) => complete(k.toString)
+            case Error => complete(StatusCodes.InternalServerError)
+        }
+      }
+    }
+
+  def updateValue =
     post {
       path(restPath) {
-        entity(as[CreateOrUpdate]) { create =>
-          onSuccess(processRequests.ask(create)) {
+        entity(as[Update]) { update =>
+          onSuccess(processRequests.ask(update)) {
             standardResponse
           }
         }

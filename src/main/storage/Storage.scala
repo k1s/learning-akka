@@ -1,33 +1,32 @@
 package storage
 
-import akka.actor.{Actor, Props}
-import scala.collection.mutable
+import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorRef, Props}
 
+import scala.collection.mutable
 import messages._
 
 /**
   *
   */
-class Storage extends Actor {
+class Storage(shardsSize: Int, shard: Shard) extends Actor {
 
-  val map = new mutable.HashMap[Int, String]()
+  var currentId = 0
 
-  def receive = {
-    case CreateOrUpdate(k, v) =>
-      map.put(k, v)
-      sender() ! Complete
-    case Read(k) => map.get(k) match {
-        case Some(v) => sender() ! Value(v)
-        case None => sender() ! Error
-      }
-    case messages.Delete(k) => map.remove(k) match {
-      case Some(v) => sender() ! Complete
-      case None => sender() ! Error
-    }
-  }
+  var shards = Vector.fill(shardsSize)(context.actorOf(Shard.props))
+
+  def bits = (Math.log(shardsSize) / Math.log(2)).toInt
+
+  /**
+    * When there are 2&#94;n shards, the first n bits of the hash code of the key are used
+    * to decide which shard a key-value pair should go to.
+    */
+  def shardNumber(k: Int): Int = k.hashCode().toBinaryString.takeRight(bits).toInt
+
+  def receive = ???
 
 }
 
 object Storage {
-  def props = Props(new Storage)
+  def props(shardsSize: Int, shard: Shard) = Props(new Storage(shardsSize, shard))
 }

@@ -5,7 +5,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
 import org.scalatest.{Matchers, WordSpec}
-
+import messages._
 import scala.concurrent.duration._
 
 /**
@@ -15,11 +15,12 @@ class RouterTest extends WordSpec
   with Matchers
   with ScalatestRouteTest {
 
-  import messages._
+  val num = 42
 
   class testProcessRequest extends Actor {
     def receive = {
-      case CreateOrUpdate(k, v) => sender() ! Complete
+      case Create(v) => sender() ! Key(num)
+      case Update(k, v) => sender() ! Complete
       case Read(k) => sender() ! Error
       case messages.Delete(k) => sender() ! Complete
     }
@@ -30,15 +31,22 @@ class RouterTest extends WordSpec
 
   "StorageRouter" should {
 
-    "response with error" in {
+    "response with error for get" in {
       Get(s"$path/1") ~> router.routes ~> check {
         status shouldEqual StatusCodes.InternalServerError
       }
     }
 
-    "response with complete" in {
+    "response with complete for delete" in {
       Delete(s"$path/1") ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
+      }
+    }
+
+    "response with num for new post" in {
+      Post(s"$path/aaa") ~> router.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        responseAs[String] shouldEqual num.toString
       }
     }
 
