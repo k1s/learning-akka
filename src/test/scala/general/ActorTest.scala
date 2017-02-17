@@ -8,7 +8,7 @@ import org.scalatest.{BeforeAndAfterAll, Suite, WordSpecLike}
   * Mixin actor test
   *
   */
-class GeneralActorTest extends TestKit(ActorSystem("test"))
+class ActorTest extends TestKit(ActorSystem("test"))
   with WordSpecLike
   with ImplicitSender
   with StopSystemAfterAll {

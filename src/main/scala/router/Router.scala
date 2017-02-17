@@ -13,7 +13,7 @@ import spray.json.DefaultJsonProtocol._
   * Storage API
   *
   */
-class Router(system: ActorSystem, timeout: Timeout, processRequests: ActorRef) {
+class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
 
   import messages._
 
@@ -38,7 +38,7 @@ class Router(system: ActorSystem, timeout: Timeout, processRequests: ActorRef) {
   def createValue =
     post {
       pathPrefix(restPath / Segment) { value =>
-          onSuccess(processRequests.ask(Create(value))) {
+          onSuccess(storage.ask(Create(value))) {
             case Key(k) => complete(k.toString)
             case Error => complete(StatusCodes.InternalServerError)
         }
@@ -49,7 +49,7 @@ class Router(system: ActorSystem, timeout: Timeout, processRequests: ActorRef) {
     post {
       path(restPath) {
         entity(as[Update]) { update =>
-          onSuccess(processRequests.ask(update)) {
+          onSuccess(storage.ask(update)) {
             standardResponse
           }
         }
@@ -59,7 +59,7 @@ class Router(system: ActorSystem, timeout: Timeout, processRequests: ActorRef) {
   def readValue =
     get {
       pathPrefix(restPath / IntNumber) { id =>
-        onSuccess(processRequests.ask(Read(id))) {
+        onSuccess(storage.ask(Read(id))) {
           case Value(v) => complete(v)
           case Error => complete(StatusCodes.InternalServerError)
         }
@@ -69,7 +69,7 @@ class Router(system: ActorSystem, timeout: Timeout, processRequests: ActorRef) {
   def deleteValue =
     delete {
       pathPrefix(restPath / IntNumber) { id =>
-        onSuccess(processRequests.ask(Delete(id))) {
+        onSuccess(storage.ask(Delete(id))) {
           standardResponse
         }
       }
