@@ -1,14 +1,15 @@
-package storage
+package services.storage
 
 import general.ActorTest
-import storage.Storage._
+import services.storage.Storage._
+import model.Messages._
+import model.User
+
 
 /**
   *
   */
 class StorageTest extends ActorTest {
-
-  import messages._
 
   "Storage" must {
 
@@ -52,17 +53,19 @@ class StorageTest extends ActorTest {
 
     }
 
+    val user = new User
+
 
     "response with error" in {
-      val storage = system.actorOf(Storage.props(7))
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
-      storage ! Read(100500)
+      storage ! Read(user, 100500)
 
       expectMsg(Error)
     }
 
-    "ignore wrong messages" in {
-      val storage = system.actorOf(Storage.props(7))
+    "ignore wrong model.messages" in {
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
       storage ! Error
 
@@ -70,65 +73,65 @@ class StorageTest extends ActorTest {
     }
 
     "create value" in {
-      val storage = system.actorOf(Storage.props(7))
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
-      storage ! Create("123")
+      storage ! Create(user, "123")
 
       expectMsg(Key(0))
     }
 
     "create values" in {
-      val storage = system.actorOf(Storage.props(7))
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
-      storage ! Create("123")
+      storage ! Create(user, "123")
 
       expectMsg(Key(0))
 
-      storage ! Create("abc")
+      storage ! Create(user, "abc")
 
       expectMsg(Key(1))
     }
 
     "create and read value" in {
-      val storage = system.actorOf(Storage.props(7))
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
-      storage ! Create("123")
+      storage ! Create(user, "123")
 
       expectMsg(Key(0))
 
-      storage ! Read(0)
+      storage ! Read(user, 0)
 
       expectMsg(Value("123"))
     }
 
     "create and delete value" in {
-      val storage = system.actorOf(Storage.props(7))
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
-      storage ! Create("123")
+      storage ! Create(user, "123")
 
       expectMsg(Key(0))
 
-      storage ! Delete(0)
+      storage ! Delete(user, 0)
 
       expectMsg(Complete)
 
-      storage ! Delete(1)
+      storage ! Delete(user, 1)
 
       expectMsg(Error)
     }
 
     "create and update value" in {
-      val storage = system.actorOf(Storage.props(7))
+      val storage = system.actorOf(Storage.props(7, emptyLogger))
 
-      storage ! Create("123")
+      storage ! Create(user, "123")
 
       expectMsg(Key(0))
 
-      storage ! Update(1, "abc")
+      storage ! Update(user, 1, "abc")
 
       expectMsg(Complete)
 
-      storage ! Read(1)
+      storage ! Read(user, 1)
 
       expectMsg(Value("abc"))
     }

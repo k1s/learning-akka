@@ -8,6 +8,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
 import akka.util.Timeout
 import spray.json.DefaultJsonProtocol._
+import model.User
+import services.storage.Storage._
 
 /**
   * Storage API
@@ -15,20 +17,21 @@ import spray.json.DefaultJsonProtocol._
   */
 class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
 
-  import messages._
+  import model.Messages._
+
+  case class KeyValue(key: Int, value: String)
+
+  implicit val kvFormat = jsonFormat2(KeyValue)
 
   implicit def executionContext = system.dispatcher
 
   implicit def requestTimeout = timeout
 
-  implicit val createFormat = jsonFormat1(Create)
-  implicit val readFormat = jsonFormat1(Read)
-  implicit val updateFormat = jsonFormat2(Update)
-  implicit val deleteFormat = jsonFormat1(Delete)
-
   val restPath = "storage"
 
   val routes = createValue ~ updateValue ~ readValue ~ deleteValue
+//  todo k1s add user
+  val user = new User
 
   val standardResponse: (Any) => server.Route = {
     case Complete => complete(StatusCodes.OK)
@@ -38,7 +41,7 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
   def createValue =
     post {
       pathPrefix(restPath / Segment) { value =>
-          onSuccess(storage.ask(Create(value))) {
+          onSuccess(storage.ask(Create(user, value))) {
             case Key(k) => complete(k.toString)
             case Error => complete(StatusCodes.InternalServerError)
         }
@@ -48,8 +51,8 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
   def updateValue =
     post {
       path(restPath) {
-        entity(as[Update]) { update =>
-          onSuccess(storage.ask(update)) {
+        entity(as[KeyValue]) { kv =>
+          onSuccess(storage.ask(Update(user, kv.key, kv.value))) {
             standardResponse
           }
         }
@@ -59,7 +62,7 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
   def readValue =
     get {
       pathPrefix(restPath / IntNumber) { id =>
-        onSuccess(storage.ask(Read(id))) {
+        onSuccess(storage.ask(Read(user, id))) {
           case Value(v) => complete(v)
           case Error => complete(StatusCodes.InternalServerError)
         }
@@ -69,7 +72,7 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
   def deleteValue =
     delete {
       pathPrefix(restPath / IntNumber) { id =>
-        onSuccess(storage.ask(Delete(id))) {
+        onSuccess(storage.ask(Delete(user, id))) {
           standardResponse
         }
       }

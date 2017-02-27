@@ -4,8 +4,10 @@ import akka.actor.{Actor, Props}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
+import model.Messages._
 import org.scalatest.{Matchers, WordSpec}
-import messages._
+import services.storage.Storage._
+
 import scala.concurrent.duration._
 
 /**
@@ -17,16 +19,16 @@ class RouterTest extends WordSpec
 
   val num = 42
 
-  class testProcessRequest extends Actor {
+  class testStorage extends Actor {
     def receive = {
-      case Create(v) => sender() ! Key(num)
-      case Update(k, v) => sender() ! Complete
-      case Read(k) => sender() ! Error
-      case messages.Delete(k) => sender() ! Complete
+      case Create(u, v) => sender() ! Key(num)
+      case Update(u, k, v) => sender() ! Complete
+      case Read(u, k) => sender() ! Error
+      case services.storage.Storage.Delete(u, k) => sender() ! Complete
     }
   }
 
-  val router = new Router(system, Timeout(1 seconds), system.actorOf(Props(new testProcessRequest)))
+  val router = new Router(system, Timeout(1 seconds), system.actorOf(Props(new testStorage)))
   val path = s"/${router.restPath}"
 
   "StorageRouter" should {

@@ -1,10 +1,10 @@
-package storage
+package services.storage
 
 import akka.actor.{Actor, Props}
-import messages._
-
+import Shard._
+import model.Messages._
 /**
-  * Shard is element of storage
+  * Shard is element of services.storage
   */
 class Shard extends Actor {
 
@@ -12,17 +12,17 @@ class Shard extends Actor {
 
   def receive = {
 
-    case Update(k, v) =>
+    case UpdateShard(k, v) =>
       map = map.updated(k, v)
       sender() ! Complete
 
-    case Read(k) =>
+    case ReadShard(k) =>
       map.get(k) match {
         case Some(v) => sender() ! Value(v)
         case None => sender() ! Error
       }
 
-    case messages.Delete(k) =>
+    case DeleteShard(k) =>
       if (map.contains(k)) {
         map = map - k
         sender() ! Complete
@@ -35,5 +35,12 @@ class Shard extends Actor {
 }
 
 object Shard {
+
+  sealed trait ShardMessage {val key: Int}
+
+  case class UpdateShard(key: Int, value: String) extends ShardMessage
+  case class ReadShard(key: Int) extends ShardMessage
+  case class DeleteShard(key: Int) extends ShardMessage
+
   def props = Props(new Shard)
 }

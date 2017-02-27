@@ -1,9 +1,9 @@
-package storage
+package services.storage
 
 import general.ActorTest
 
-import scala.concurrent.duration.FiniteDuration
-import messages._
+import model.Messages._
+import Shard._
 
 /**
   *
@@ -12,7 +12,7 @@ class ShardTest extends ActorTest {
 
     "Shard" must {
 
-      "ignore wrong messages" in {
+      "ignore wrong model.messages" in {
         val shard = system.actorOf(Shard.props)
 
         shard ! Error
@@ -23,7 +23,7 @@ class ShardTest extends ActorTest {
       "create value" in {
         val shard = system.actorOf(Shard.props)
 
-        shard ! Update(1, "123")
+        shard ! UpdateShard(1, "123")
 
         expectMsg(Complete)
       }
@@ -31,11 +31,11 @@ class ShardTest extends ActorTest {
       "create and read value" in {
         val shard = system.actorOf(Shard.props)
 
-        shard ! Update(1, "123")
+        shard ! UpdateShard(1, "123")
 
         expectMsg(Complete)
 
-        shard ! Read(1)
+        shard ! ReadShard(1)
 
         expectMsg(Value("123"))
       }
@@ -43,15 +43,15 @@ class ShardTest extends ActorTest {
       "create and delete value" in {
         val shard = system.actorOf(Shard.props)
 
-        shard ! Update(1, "123")
+        shard ! UpdateShard(1, "123")
 
         expectMsg(Complete)
 
-        shard ! Delete(1)
+        shard ! DeleteShard(1)
 
         expectMsg(Complete)
 
-        shard ! Delete(1)
+        shard ! DeleteShard(1)
 
         expectMsg(Error)
       }
@@ -59,15 +59,15 @@ class ShardTest extends ActorTest {
       "create and update value" in {
         val shard = system.actorOf(Shard.props)
 
-        shard ! Update(1, "123")
+        shard ! UpdateShard(1, "123")
 
         expectMsg(Complete)
 
-        shard ! Update(1, "abc")
+        shard ! UpdateShard(1, "abc")
 
         expectMsg(Complete)
 
-        shard ! Read(1)
+        shard ! ReadShard(1)
 
         expectMsg(Value("abc"))
       }
