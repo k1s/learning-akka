@@ -2,6 +2,7 @@ package router
 
 import akka.actor.{Actor, Props}
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
 import model.Messages._
@@ -23,6 +24,7 @@ class RouterTest extends WordSpec
     def receive = {
       case Create(u, v) => sender() ! Key(num)
       case Update(u, k, v) => sender() ! Complete
+      case Read(u, 42) => sender() ! Value(u.name)
       case Read(u, k) => sender() ! Error
       case services.storage.Storage.Delete(u, k) => sender() ! Complete
     }
@@ -33,20 +35,36 @@ class RouterTest extends WordSpec
 
   "StorageRouter" should {
 
-    "response with error for get" in {
+    val credentials = BasicHttpCredentials("Alala", "p4ssw0rd")
+
+    "reject request without credentials " in {
       Get(s"$path/1") ~> router.routes ~> check {
+        status shouldEqual StatusCodes.Unauthorized
+        responseAs[String] shouldEqual "The resource requires authentication"
+      }
+    }
+
+    "response with error" in {
+      Get(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.InternalServerError
       }
     }
 
+    "response with user name" in {
+      Get(s"$path/42") ~> addCredentials(credentials) ~> router.routes ~> check {
+        status shouldEqual StatusCodes.OK
+        responseAs[String] shouldEqual "Alala"
+      }
+    }
+
     "response with complete for delete" in {
-      Delete(s"$path/1") ~> router.routes ~> check {
+      Delete(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
     }
 
     "response with num for new post" in {
-      Post(s"$path/aaa") ~> router.routes ~> check {
+      Post(s"$path/aaa") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
         responseAs[String] shouldEqual num.toString
       }
@@ -60,7 +78,7 @@ class RouterTest extends WordSpec
         uri = path,
         entity = HttpEntity(MediaTypes.`application/json`, json))
 
-      request ~> router.routes ~> check {
+      request ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
     }

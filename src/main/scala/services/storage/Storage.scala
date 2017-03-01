@@ -2,11 +2,9 @@ package services.storage
 
 import akka.actor.{Actor, ActorRef, Props}
 import model.Messages._
-import Storage._
-import Shard._
-import Shard.ShardMessage
-import model.User
-import services.log.LogService._
+import model.{Log, User}
+import services.storage.Shard.{ShardMessage, _}
+import services.storage.Storage._
 
 /**
   * Storage, shards size must be > 0

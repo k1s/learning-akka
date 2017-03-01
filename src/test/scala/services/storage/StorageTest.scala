@@ -53,7 +53,7 @@ class StorageTest extends ActorTest {
 
     }
 
-    val user = new User
+    val user = User("user")
 
 
     "response with error" in {

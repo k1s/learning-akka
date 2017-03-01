@@ -2,6 +2,7 @@ package general
 
 import akka.actor.Props
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
 import org.scalatest.{Matchers, WordSpec}
@@ -21,11 +22,12 @@ class RouterIntegrationTest extends WordSpec
   val storage = system.actorOf(Storage.props(7, emptyLogger))
   val router = new Router(system, Timeout.durationToTimeout(FiniteDuration(50, "millis")), storage)
   val path = s"/${router.restPath}"
+  val credentials = BasicHttpCredentials("Alala", "p4ssw0rd")
 
   "StorageRouter" should {
 
     "response with error" in {
-      Get(s"$path/1") ~> router.routes ~> check {
+      Get(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.InternalServerError
       }
     }
@@ -38,7 +40,7 @@ class RouterIntegrationTest extends WordSpec
         uri = path,
         entity = HttpEntity(MediaTypes.`application/json`, json))
 
-      request ~> router.routes ~> check {
+      request ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
     }
@@ -51,11 +53,11 @@ class RouterIntegrationTest extends WordSpec
         uri = path,
         entity = HttpEntity(MediaTypes.`application/json`, json))
 
-      request ~> router.routes ~> check {
+      request ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
 
-      Get(s"$path/1") ~> router.routes ~> check {
+      Get(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
         responseAs[String] shouldEqual "123"
       }
@@ -69,15 +71,15 @@ class RouterIntegrationTest extends WordSpec
         uri = path,
         entity = HttpEntity(MediaTypes.`application/json`, json))
 
-      request ~> router.routes ~> check {
+      request ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
 
-      Delete(s"$path/1") ~> router.routes ~> check {
+      Delete(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
 
-      Delete(s"$path/1") ~> router.routes ~> check {
+      Delete(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.InternalServerError
       }
     }
@@ -90,7 +92,7 @@ class RouterIntegrationTest extends WordSpec
         uri = path,
         entity = HttpEntity(MediaTypes.`application/json`, json))
 
-      request ~> router.routes ~> check {
+      request ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
 
@@ -101,16 +103,16 @@ class RouterIntegrationTest extends WordSpec
         uri = path,
         entity = HttpEntity(MediaTypes.`application/json`, json1))
 
-      request1 ~> router.routes ~> check {
+      request1 ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
 
-      Get(s"$path/1") ~> router.routes ~> check {
+      Get(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
         responseAs[String] shouldEqual "abc"
       }
 
-      Delete(s"$path/1") ~> router.routes ~> check {
+      Delete(s"$path/1") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
       }
 
