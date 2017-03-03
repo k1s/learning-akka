@@ -1,6 +1,6 @@
 package services.storage
 
-import general.ActorTest
+import general.GeneralTest
 
 import model.Messages._
 import Shard._
@@ -8,7 +8,7 @@ import Shard._
 /**
   *
   */
-class ShardTest extends ActorTest {
+class ShardTest extends GeneralTest {
 
     "Shard" must {
 

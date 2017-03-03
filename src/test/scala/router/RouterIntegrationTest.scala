@@ -1,12 +1,12 @@
-package general
+package router
 
 import akka.actor.Props
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
+import general.EmptyLogger
 import org.scalatest.{Matchers, WordSpec}
-import router.Router
 import services.storage.Storage
 
 import scala.concurrent.duration.FiniteDuration

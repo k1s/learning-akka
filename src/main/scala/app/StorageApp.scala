@@ -3,19 +3,13 @@ package app
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import akka.event.{Logging, LoggingAdapter}
+import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.typesafe.config.Config
 import router.Router
-
-import scala.concurrent.ExecutionContext
-import services._
-import services.log.LogService
-import storage._
-
-import scala.concurrent.duration.Duration
+import services.storage._
+import services.{DataBaseService, LogService, _}
 
 object StorageApp extends App with ConfigService {
   implicit val system = ActorSystem()
@@ -23,7 +17,7 @@ object StorageApp extends App with ConfigService {
   implicit val log = Logging(system, getClass)
   implicit val materializer = ActorMaterializer()
 
-  val database = new DataBaseService(jdbcUrl, dbUser, dbPassword, maxConnections)
+  val database = new DataBaseService
   val logger = system.actorOf(LogService.props(database.db))
   val storage = system.actorOf(Storage.props(shardsNum, logger))
   val router = new Router(system, Timeout(timeoutSeconds, TimeUnit.SECONDS), storage)

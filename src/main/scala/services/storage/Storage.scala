@@ -1,8 +1,8 @@
 package services.storage
 
 import akka.actor.{Actor, ActorRef, Props}
-import model.Messages._
 import model.{Log, User}
+import model.Messages._
 import services.storage.Shard.{ShardMessage, _}
 import services.storage.Storage._
 
@@ -29,19 +29,19 @@ class Storage(shardsSize: Int, logService: ActorRef) extends Actor {
       val num = shardNumber(currentKey, shardsSize)
       shards(num) ! UpdateShard(currentKey, v)
       sender() ! Key(currentKey)
-      logService ! Log(s"Create $v with id $currentKey")
+      logService ! Log(u, s"Create $v with id $currentKey")
       currentKey += 1
 
     case Read(u, k) =>
-      logService ! Log(s"Read value with key $k")
+      logService ! Log(u, s"Read value with key $k")
       forwardToShard(ReadShard(k))
 
     case Update(u, k, v) =>
-      logService ! Log(s"Update key $k with value $v")
+      logService ! Log(u, s"Update key $k with value $v")
       forwardToShard(UpdateShard(k, v))
 
     case Delete(u, k) =>
-      logService ! Log(s"Delete key $k")
+      logService ! Log(u, s"Delete key $k")
       forwardToShard(DeleteShard(k))
 
   }

@@ -1,6 +1,6 @@
 package services.storage
 
-import general.ActorTest
+import general.GeneralTest
 import services.storage.Storage._
 import model.Messages._
 import model.User
@@ -9,7 +9,7 @@ import model.User
 /**
   *
   */
-class StorageTest extends ActorTest {
+class StorageTest extends GeneralTest {
 
   "Storage" must {
 

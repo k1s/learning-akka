@@ -1,22 +1,22 @@
 package model
 
-import slick.lifted.{TableQuery, Tag}
-import slick.model.Table
+import slick.jdbc.PostgresProfile.api._
+import slick.lifted.Tag
 
 case class User(name: String)
 
-//class Users(tag: Tag) extends Table[(Int, String)](tag, "users") {
-//
-//  def id = column[Int]("id", O.AutoInc)
-//
-//  def name = column[String]("name", O.PrimaryKey)
-//
-//  def password = column[String]("password")
-//
-//  def * = (id, name)
-//
-//}
+case class UserEntity(id: Option[Int] = None, name: String)
 
-object User {
-//  val users = TableQuery[Users]
+class UsersTable(tag: Tag) extends Table[UserEntity](tag, "users") {
+
+  def id = column[Option[Int]]("id", O.AutoInc)
+
+  def name = column[String]("name", O.PrimaryKey)
+
+  def * = (id, name) <> (UserEntity.tupled, UserEntity.unapply)
+
+}
+
+object UsersTable {
+  val users = TableQuery[UsersTable]
 }
