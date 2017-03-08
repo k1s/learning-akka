@@ -9,7 +9,8 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import router.Router
 import services.storage._
-import services.{DataBaseService, LogService, _}
+import services.{ConfigService, DataBaseService, UserService}
+import services.logger.LogService
 
 object StorageApp extends App with ConfigService {
   implicit val system = ActorSystem()
@@ -17,10 +18,11 @@ object StorageApp extends App with ConfigService {
   implicit val log = Logging(system, getClass)
   implicit val materializer = ActorMaterializer()
 
-  val database = new DataBaseService
-  val logger = system.actorOf(LogService.props(database.db))
+  val database = DataBaseService("postgres")
+  val logger = system.actorOf(LogService.props(database))
   val storage = system.actorOf(Storage.props(shardsNum, logger))
-  val router = new Router(system, Timeout(timeoutSeconds, TimeUnit.SECONDS), storage)
+  val userService = UserService(database)
+  val router = new Router(system, Timeout(timeoutSeconds, TimeUnit.SECONDS), storage, userService)
 
   Http().bindAndHandle(router.routes, interface = httpHost, port = httpPort)
 }

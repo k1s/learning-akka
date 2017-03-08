@@ -1,12 +1,13 @@
-package router
+package general
 
 import akka.actor.Props
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
-import general.EmptyLogger
 import org.scalatest.{Matchers, WordSpec}
+import router.Router
+import services.UserService
 import services.storage.Storage
 
 import scala.concurrent.duration.FiniteDuration
@@ -14,15 +15,21 @@ import scala.concurrent.duration.FiniteDuration
 /**
   *
   */
-class RouterIntegrationTest extends WordSpec
+//todo k1s
+class IntegrationTest extends WordSpec
   with Matchers
   with ScalatestRouteTest {
 
-  val emptyLogger = system.actorOf(Props(new EmptyLogger))
+  val emptyLogger = system.actorOf(Props(new EmptyLogger)) //todo k1s
   val storage = system.actorOf(Storage.props(7, emptyLogger))
-  val router = new Router(system, Timeout.durationToTimeout(FiniteDuration(50, "millis")), storage)
+  val test = GeneralTest()
+  val router = new Router(
+    system,
+    Timeout.durationToTimeout(FiniteDuration(50, "millis")),
+    storage,
+    UserService(test.testDataBaseService))
   val path = s"/${router.restPath}"
-  val credentials = BasicHttpCredentials("Alala", "p4ssw0rd")
+  val credentials = BasicHttpCredentials("system", "password")
 
   "StorageRouter" should {
 

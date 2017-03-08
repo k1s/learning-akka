@@ -1,8 +1,9 @@
 package services.storage
 
 import akka.actor.{Actor, ActorRef, Props}
-import model.{Log, User}
 import model.Messages._
+import model.User
+import services.logger.LogService.Log
 import services.storage.Shard.{ShardMessage, _}
 import services.storage.Storage._
 

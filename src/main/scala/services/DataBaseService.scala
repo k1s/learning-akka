@@ -3,8 +3,8 @@ package services
 import slick.basic.DatabaseConfig
 import slick.jdbc.{JdbcBackend, JdbcProfile}
 
-class DataBaseService {
-  val dbConfig = DatabaseConfig.forConfig[JdbcProfile]("postgres")
+case class DataBaseService(configName: String) {
+  val dbConfig = DatabaseConfig.forConfig[JdbcProfile](configName)
   val db: JdbcBackend#DatabaseDef = dbConfig.db
   db.createSession()
 }

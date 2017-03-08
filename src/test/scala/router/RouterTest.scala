@@ -5,8 +5,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.util.{ByteString, Timeout}
+import general.GeneralTest
 import model.Messages._
 import org.scalatest.{Matchers, WordSpec}
+import services.UserService
 import services.storage.Storage._
 
 import scala.concurrent.duration._
@@ -30,12 +32,17 @@ class RouterTest extends WordSpec
     }
   }
 
-  val router = new Router(system, Timeout(1 seconds), system.actorOf(Props(new testStorage)))
+  val test = GeneralTest()
+  val router = new Router(
+    system,
+    Timeout(1 seconds),
+    system.actorOf(Props(new testStorage)),
+    UserService(test.testDataBaseService))
   val path = s"/${router.restPath}"
 
   "StorageRouter" should {
 
-    val credentials = BasicHttpCredentials("Alala", "p4ssw0rd")
+    val credentials = BasicHttpCredentials("system", "password")
 
     "reject request without credentials " in {
       Get(s"$path/1") ~> router.routes ~> check {
@@ -53,7 +60,7 @@ class RouterTest extends WordSpec
     "response with user name" in {
       Get(s"$path/42") ~> addCredentials(credentials) ~> router.routes ~> check {
         status shouldEqual StatusCodes.OK
-        responseAs[String] shouldEqual "Alala"
+        responseAs[String] shouldEqual "system"
       }
     }
 

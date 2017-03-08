@@ -3,9 +3,9 @@ package model
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.Tag
 
-case class User(name: String)
+case class User(id: Int, name: String)
 
-case class UserEntity(id: Option[Int] = None, name: String)
+case class UserEntity(id: Option[Int] = None, name: String, password: String)
 
 class UsersTable(tag: Tag) extends Table[UserEntity](tag, "users") {
 
@@ -13,10 +13,16 @@ class UsersTable(tag: Tag) extends Table[UserEntity](tag, "users") {
 
   def name = column[String]("name", O.PrimaryKey)
 
-  def * = (id, name) <> (UserEntity.tupled, UserEntity.unapply)
+  def password = column[String]("password")
+
+  def * = (id, name, password) <> (UserEntity.tupled, UserEntity.unapply)
 
 }
 
 object UsersTable {
+
   val users = TableQuery[UsersTable]
+
+  val systemUser = User(1, "system")
+
 }

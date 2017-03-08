@@ -9,11 +9,10 @@ trait ConfigService {
   val httpHost = httpConfig.getString("interface")
   val httpPort = httpConfig.getInt("port")
 
-  private val databaseConfig = config.getConfig("database")
-  val jdbcUrl = databaseConfig.getString("url")
-  val dbUser = databaseConfig.getString("user")
-  val dbPassword = databaseConfig.getString("password")
-  val maxConnections = databaseConfig.getInt("maxConnections")
+  private val databaseConfig = config.getConfig("postgres")
+  val jdbcUrl = databaseConfig.getString("db.url")
+  val dbUser = databaseConfig.getString("db.user")
+  val dbPassword = databaseConfig.getString("db.password")
 
   private val storageConfig = config.getConfig("storage")
   val timeoutSeconds = storageConfig.getInt("timeoutSeconds")

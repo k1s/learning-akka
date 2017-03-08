@@ -9,15 +9,18 @@ import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, RejectionHandler}
 import akka.pattern.ask
 import akka.util.Timeout
-import model.User
+import model.{User, UserEntity}
+import services.UserService
 import services.storage.Storage._
 import spray.json.DefaultJsonProtocol._
+
+import scala.concurrent.Future
 
 /**
   * Storage API
   *
   */
-class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
+class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef, userService: UserService) {
 
   import model.Messages._
 
@@ -36,9 +39,12 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
     case Error => complete(StatusCodes.InternalServerError)
   }
 
-  def userAuthenticator(credentials: Credentials): Option[String] = credentials match {
-    case Credentials.Provided(userName) => Some(userName)
-    case _ => None
+  def userAuthenticator(credentials: Credentials): Future[Option[User]] = credentials match {
+    case provided @ Credentials.Provided(name) => userService.getUserEntityByName(name) flatMap  {
+        case Some(UserEntity(Some(id), _, password)) if provided.verify(password) => Future(Some(User(id, name)))
+        case _ => Future.successful(None)
+      }
+    case _ => Future.successful(None)
   }
 
   val rejectionHandler = RejectionHandler.newBuilder()
@@ -49,10 +55,10 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
 
   val routes = {
     handleRejections(rejectionHandler) {
-      authenticateBasic(realm = "very secure", userAuthenticator) { userName =>
+      authenticateBasicAsync(realm = "very secure", userAuthenticator) { user =>
         post {
           pathPrefix(restPath / Segment) { value =>
-            onSuccess(storage.ask(Create(User(userName), value))) {
+            onSuccess(storage.ask(Create(user, value))) {
               case Key(k) => complete(k.toString)
               case Error => complete(StatusCodes.InternalServerError)
             }
@@ -60,21 +66,21 @@ class Router(system: ActorSystem, timeout: Timeout, storage: ActorRef) {
         } ~ post {
           path(restPath) {
             entity(as[KeyValue]) { kv =>
-              onSuccess(storage.ask(Update(User(userName), kv.key, kv.value))) {
+              onSuccess(storage.ask(Update(user, kv.key, kv.value))) {
                 standardResponse
               }
             }
           }
         } ~ get {
           pathPrefix(restPath / IntNumber) { id =>
-            onSuccess(storage.ask(Read(User(userName), id))) {
+            onSuccess(storage.ask(Read(user, id))) {
               case Value(v) => complete(v)
               case Error => complete(StatusCodes.InternalServerError)
             }
           }
         } ~ delete {
           pathPrefix(restPath / IntNumber) { id =>
-            onSuccess(storage.ask(Delete(User(userName), id))) {
+            onSuccess(storage.ask(Delete(user, id))) {
               standardResponse
             }
           }

@@ -1,6 +1,7 @@
 scalaVersion := "2.12.1"
 
 libraryDependencies ++= Seq(
+
   "com.typesafe.akka" %% "akka-actor" % "2.4.16",
   "com.typesafe.akka" %% "akka-slf4j" % "2.4.16",
 
@@ -13,6 +14,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" % "slick_2.12" % "3.2.0",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0",
   "org.postgresql" % "postgresql" % "9.4.1212",
+  "org.flywaydb" % "flyway-core" % "4.1.2",
 
   "ch.qos.logback" % "logback-classic" % "1.2.1",
   "ch.qos.logback" % "logback-core" % "1.2.1",

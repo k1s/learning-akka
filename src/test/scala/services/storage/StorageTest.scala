@@ -53,7 +53,7 @@ class StorageTest extends GeneralTest {
 
     }
 
-    val user = User("user")
+    val user = User(42, "user")
 
 
     "response with error" in {

@@ -3,8 +3,6 @@ package model
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.Tag
 
-case class Log(user: User, message: String)
-
 case class LogEntity(id: Option[Int], text: String, userId: Option[Int])
 
 class LogsTable(tag: Tag) extends Table[LogEntity](tag, "logs") {
@@ -22,6 +20,10 @@ class LogsTable(tag: Tag) extends Table[LogEntity](tag, "logs") {
 }
 
 object LogsTable {
+
   val logs = TableQuery[LogsTable]
+
+  def toEntity(userId: Int, message: String) = LogEntity(None, message, Some(userId))
+
 }
 
